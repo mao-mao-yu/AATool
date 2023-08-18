@@ -1,5 +1,6 @@
 
 # ATTool 音视频转录工具 (ATTool Audio and Video Transcription Tool)  
+![日本語](https://github.com/mao-mao-yu/AATool/blob/master/README_JP.md)
 
 ## 描述 (Description)
 
