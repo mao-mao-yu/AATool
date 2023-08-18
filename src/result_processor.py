@@ -24,6 +24,8 @@ class ResultProcessor:
         """
         Extract text from segments within the specified start and end times
         """
+        start = float(start)
+        end = float(end)
         lines: List[str] = []
         segments = self.__json_data.get("segments")
         if segments is not None:

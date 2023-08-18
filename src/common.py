@@ -79,7 +79,8 @@ def video_to_audio(input_file: str,
             "-vn",
             "-c:a",
             audio_codec,
-            output_file
+            output_file,
+            "-y"
         ]
 
         # 如果提供了开始时间和结束时间，将它们添加到命令中

@@ -57,16 +57,20 @@ def main():
     # 日志初始化
     configure_logging()
     # args
-    # input_video_path, start, end, output_folder = cmd_args()
-    input_video_path, start, end, output_folder = ini_args()
+    # input_file, start, end, output_folder = cmd_args()
+    input_file, start, end, output_folder = ini_args()
 
-    if os.path.isdir(input_video_path):
-        logging.error("输入的不是文件")
+    if os.path.isdir(input_file):
+        logging.error(f"输入的不是文件{input_file}")
+        exit(-1)
 
-    file_extensions = common.get_file_extension(input_video_path)
+    file_extensions = common.get_file_extension(input_file)
+    print(file_extensions)
 
     # 是否是支持的格式
-    if file_extensions not in const.video_formats and file_extensions not in const.audio_formats:
+    if (file_extensions not in const.video_formats
+            and file_extensions not in const.audio_formats
+            and file_extensions != ".json"):
         logging.error(f"不支持的格式{file_extensions}")
 
     # 判断输出文件夹路径
@@ -76,24 +80,28 @@ def main():
             os.makedirs(output_folder)
     else:
         # 使用默认输出文件夹路径：视频文件所在文件夹
-        output_folder = os.path.dirname(os.path.abspath(input_video_path))
+        output_folder = os.path.dirname(os.path.abspath(input_file))
 
-    # 如果是视频则转音频
-    if file_extensions in const.video_formats:
-        logging.info("开始转换视频到音频")
-        audio_path = common.video_to_audio(input_video_path, output_folder)
+    if file_extensions != ".json":
+        # 如果是视频则转音频
+        if file_extensions in const.video_formats:
+            logging.info("开始转换视频到音频")
+            audio_path = common.video_to_audio(input_file, output_folder)
+        else:
+            audio_path = input_file
+
+        logging.info("开始抄录音频到json")
+        vt = video_transcriber.VideoTranscriber()
+        json_path = vt.transcribe(audio_path).output_to_file(output_folder)
+        logging.info(f"已抄录到{json_path}")
     else:
-        audio_path = input_video_path
-
-    logging.info("开始抄录音频到json")
-    vt = video_transcriber.VideoTranscriber()
-    json_path = vt.transcribe(audio_path).output_to_file(output_folder)
-    logging.info(f"已抄录到{json_path}")
+        json_path = input_file
 
     rp = result_processor.ResultProcessor()
     rp.read(json_path)
     rp.output_to_text(start, end)
     logging.info(f"已转换为TXT文件到{output_folder}")
+
     input("输入任意键退出")
 
 
