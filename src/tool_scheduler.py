@@ -38,6 +38,10 @@ class ToolScheduler:
 
         config.configure_logging()
         self.input_file, self.start, self.end, self.output_folder = config.read_config_args()
+        if self.start == "":
+            self.start = 0.0
+        if self.end == "":
+            self.end = float('inf')
 
     @staticmethod
     def get_work_folder():
@@ -48,7 +52,7 @@ class ToolScheduler:
     def get_output_folder(self, input_path: str) -> str:
         """Determine the output folder based on input file and configuration."""
 
-        if self.output_folder is not None:
+        if self.output_folder is not None and self.output_folder != "":
             # If output folder is defined, use it and ensure it exists
             output_folder = os.path.abspath(self.output_folder)
             util.ensure_directory_exists(output_folder)
@@ -58,11 +62,12 @@ class ToolScheduler:
                 output_folder = input_path
             else:
                 output_folder = os.path.dirname(os.path.abspath(input_path))
+
         return output_folder
 
     def process(self, input_file):
         """Determine the input file type and process accordingly."""
-
+        logging.debug(f"Start process {input_file}")
         file_extension = self.get_supported_file_extension(input_file)
         if file_extension is None:
             logging.error(f"FFMPEG does not support this type...{input_file}")
@@ -74,7 +79,8 @@ class ToolScheduler:
         elif file_extension in const.support_audio:
             self.process_audio(input_file)
         elif file_extension.lower() == ".json":
-            self.process_json(input_file, self.get_output_folder(input_file))
+            output_path = self.get_output_folder(input_file)
+            self.process_json(input_file, output_path)
         else:
             logging.error(f"Error file type {input_file}")
 
@@ -89,7 +95,7 @@ class ToolScheduler:
         """Transcribe audio files into a JSON format."""
 
         input_path = self.video_transcriber.transcribe(input_path).output_to_file(self.work_directory)
-        self.process_json(input_path, self.get_output_folder(input_path))
+        self.process_json(input_path, self.get_output_folder(self.input_file))
 
     def process_json(self, json_filepath, output_folder):
         """Read the JSON content and convert to text format."""

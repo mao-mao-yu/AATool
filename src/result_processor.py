@@ -24,18 +24,16 @@ class ResultProcessor:
         except Exception as e:
             logging.error(f"Error reading JSON file {input_file}: {e}")
 
-    def _get_text(self, start: Optional[float] = None, end: Optional[float] = float('inf')) -> str:
+    def _get_text(self, start: float = 0.0, end: float = float('inf')) -> str:
         """Extract text from segments between the given start and end times.
 
         Args:
-            start (Optional[float], default=None): Start time.
-            end (Optional[float], default=float('inf')): End time.
+            start (float, default=0.0): Start time.
+            end (float, default=float('inf')): End time.
 
         Returns:
             str: Extracted text.
         """
-        start = float(start)
-        end = float(end)
         lines: List[str] = []
         segments = self.__json_data.get("segments")
         if segments is not None:
@@ -47,7 +45,7 @@ class ResultProcessor:
 
         return "\n".join(lines)
 
-    def output_to_text(self, start: Union[float, str], end: Optional[Union[float, str]] = float('inf'),
+    def output_to_text(self, start: Union[float], end: Optional[Union[float]] = float('inf'),
                        output_path: str = None) -> str:
         """Convert the content to text and save it as a .txt file.
 

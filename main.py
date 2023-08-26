@@ -8,7 +8,7 @@ def main():
     rp = ResultProcessor()
     ts = ToolScheduler(vt, rp)
     ts.run()
-    input("Input enter to quit")
+    input("Enter to quit")
 
 
 if __name__ == '__main__':
