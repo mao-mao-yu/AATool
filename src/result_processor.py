@@ -1,18 +1,22 @@
+import os.path
 from typing import Optional, List, Union
 import logging
-from src.common import json_reader, change_file_extension, text_writer
+from src.util import json_reader, change_file_extension, text_writer
 
 
 class ResultProcessor:
     def __init__(self):
-        # Input file name
+        """Initialize ResultProcessor."""
+        # Name of the input file
         self.__input_file = None
-        # JSON data from input file
+        # JSON data extracted from the input file
         self.__json_data = None
 
     def read(self, input_file: str) -> None:
-        """
-        Read JSON data from input file
+        """Read JSON data from the specified input file.
+
+        Args:
+            input_file (str): Path of the input file.
         """
         self.__input_file = input_file
         try:
@@ -21,8 +25,14 @@ class ResultProcessor:
             logging.error(f"Error reading JSON file {input_file}: {e}")
 
     def _get_text(self, start: Optional[float] = None, end: Optional[float] = float('inf')) -> str:
-        """
-        Extract text from segments within the specified start and end times
+        """Extract text from segments between the given start and end times.
+
+        Args:
+            start (Optional[float], default=None): Start time.
+            end (Optional[float], default=float('inf')): End time.
+
+        Returns:
+            str: Extracted text.
         """
         start = float(start)
         end = float(end)
@@ -33,24 +43,38 @@ class ResultProcessor:
                 text = seg.get("text")
                 seg_start = int(seg.get("start"))
                 if (start - 0.25) * 60 < seg_start < (end + 0.25) * 60:
-                    print(text)
                     lines.append(text)
 
         return "\n".join(lines)
 
-    def output_to_text(self, start: Union[float, str], end: Optional[Union[float, str]] = float('inf')) -> str:
+    def output_to_text(self, start: Union[float, str], end: Optional[Union[float, str]] = float('inf'),
+                       output_path: str = None) -> str:
+        """Convert the content to text and save it as a .txt file.
+
+        Args:
+            start (Union[float, str]): Start time.
+            end (Optional[Union[float, str]], default=float('inf')): End time.
+            output_path (str, optional): Path for the output file.
+
+        Returns:
+            str: Name of the output file.
         """
-        Convert content to text and save to a .txt file. Returns the filename.
-        """
-        filename = change_file_extension(self.__input_file, ".txt")
+        filename = os.path.basename(self.__input_file)
+        if output_path is None:
+            output_path = change_file_extension(self.__input_file, ".txt")
+        else:
+            new_name = change_file_extension(filename, ".txt")
+            output_path = os.path.join(output_path, new_name)
         all_text = self._get_text(start, end)
-        text_writer(filename, all_text)
+        text_writer(output_path, all_text)
 
         return filename
 
     def output_to_srt(self) -> str:
-        """
-        Output the text to a .srt file
+        """Convert the content to SRT format and save as a .srt file.
+
+        Returns:
+            str: Name of the output file.
         """
         filename = change_file_extension(self.__input_file, ".srt")
         text_writer(filename, self._get_srt_content())
@@ -59,8 +83,13 @@ class ResultProcessor:
 
     @staticmethod
     def _format_srt_time(time_in_seconds: int) -> str:
-        """
-        Format a timestamp (in seconds) into SRT format (HH:MM:SS,MS)
+        """Format a timestamp in seconds into the SRT format (HH:MM:SS,MS).
+
+        Args:
+            time_in_seconds (int): Timestamp in seconds.
+
+        Returns:
+            str: Formatted timestamp.
         """
         hours, remainder = divmod(time_in_seconds, 3600)
         minutes, seconds = divmod(remainder, 60)
@@ -70,8 +99,10 @@ class ResultProcessor:
         return "{:02}:{:02}:{:02},{:03}".format(hours, minutes, seconds, milliseconds)
 
     def _get_srt_content(self) -> str:
-        """
-        Format the JSON data into SRT content
+        """Convert the JSON data into SRT formatted content.
+
+        Returns:
+            str: Content in SRT format.
         """
         lines: List[str] = []
         segments = self.__json_data.get("segments")
@@ -81,7 +112,7 @@ class ResultProcessor:
                 start = seg.get("start")
                 end = seg.get("end")
 
-                # format timestamps into SRT format
+                # Format timestamps into SRT format
                 start_time = self._format_srt_time(start)
                 end_time = self._format_srt_time(end)
 
